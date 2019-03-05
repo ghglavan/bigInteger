@@ -1,12 +1,15 @@
 #include <iostream>
 #include <string>
 #include <list>
+#include <vector>
 
 class bigInteger{
 public:
 
     bool sign; // false for positive, true for negative
     std::list<int> digits;
+
+
 };
 
 bool isSmaller(bigInteger a, bigInteger b){
@@ -137,46 +140,109 @@ bigInteger& operator+(bigInteger i1, bigInteger i2){
     else return(i1 - i2);
 }
 
+bigInteger& operator* (bigInteger i1, bigInteger i2){
+    std::vector<bigInteger> sums;
 
+    int shift = 0;
+    int carry = 0;
+
+    for(std::list<int>::iterator it1 = i1.digits.begin(); it1 != i1.digits.end(); ++it1){
+        bigInteger aux;
+        for(int j = 0; j < shift; ++j)
+            aux.digits.push_back(0);
+
+        shift++;
+
+        for(std::list<int>::iterator it2 = i2.digits.begin(); it2 != i2.digits.end(); ++it2){
+            int product = (*it1) * (*it2) + carry;
+            carry = product/10;
+            product %= 10;
+
+            aux.digits.push_back(product);
+        }
+
+        aux.digits.push_back(carry);
+        carry = 0;
+
+        sums.push_back(aux);
+    }
+
+    bigInteger i3;
+
+    i3 = sums[0];
+
+    for(int i = 1; i < sums.size(); ++i){
+        i3 = i3 + sums[i];
+    }
+
+    bigInteger *i4 = new bigInteger;
+
+    i4->digits = i3.digits;
+
+    if(i1.sign == i2.sign)
+        i4->sign = false;
+    else
+        i4->sign = true;
+
+    return *i4;
+}
+
+bigInteger& operator/ (bigInteger i1, bigInteger i2){
+
+}
 
 std::istream& operator>> (std::istream& is, bigInteger &integer){
-    char bSign;
-    is >> bSign;
-
-    if(bSign == '+')
-        integer.sign = false;
-    else if(bSign == '-')
-        integer.sign = true;
-    else if(bSign >= '0' && bSign <= '9'){
-        integer.sign = false;
-        integer.digits.push_front(bSign - '0');
-
-        if(bSign == '0')
-            return is;
-    }
 
     std::string number;
     is >> number;
 
+    if(number[0] == '-')
+        integer.sign = true;
+    else
+        integer.sign = false;
+
     for(int i = 0; i < number.length(); i++){
-        int x = number[i] - '0';
-        integer.digits.push_front(x);
+        if(number[i] >= '0' && number[i] <= '9'){
+            int x = number[i] - '0';
+            integer.digits.push_front(x);
+        }
     }
 
     return is;
 }
 
 std::ostream& operator<< (std::ostream& os, bigInteger &integer){
-    if(integer.sign)
-        std::cout<<'-';
 
-    if(integer.digits.back()){
-        std::cout<<0;
+    bool flag = true;
+
+    for(std::list<int>::reverse_iterator it = integer.digits.rbegin(); it != integer.digits.rend(); ++it){
+        if(*it != 0){
+            flag = false;
+            break;
+        }
+    }
+
+    if(flag){
+        os<<0;
         return os;
     }
 
+    if(integer.sign)
+        os<<'-';
+
+    flag = false;
+
     for(std::list<int>::reverse_iterator it = integer.digits.rbegin(); it != integer.digits.rend(); ++it)
-        std::cout<<*it;
+        if(*it != 0){
+            flag = true;
+            os<<*it;
+        }
+        else if(!flag){
+            continue;
+        }
+        else{
+            os << *it;
+        }
 
     return os;
 }
@@ -188,7 +254,7 @@ int main(){
     std::cin >> i;
     std::cin >> j;
     //std::cout << i << std::endl << j << std::endl;
-    bigInteger k = i - j;
+    bigInteger k = i * j;
     std::cout << k << std::endl;
     return 0;
 }

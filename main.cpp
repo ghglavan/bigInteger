@@ -187,6 +187,8 @@ bigInteger& operator* (bigInteger i1, bigInteger i2){
     return *i4;
 }
 
+
+
 bigInteger& operator/ (bigInteger i1, bigInteger i2){
 
 }
@@ -247,14 +249,16 @@ std::ostream& operator<< (std::ostream& os, bigInteger &integer){
     return os;
 }
 
-
+bigInteger& operator% (bigInteger i1, bigInteger i2){
+    
+}
 
 int main(){
     bigInteger i, j;
     std::cin >> i;
     std::cin >> j;
     //std::cout << i << std::endl << j << std::endl;
-    bigInteger k = i * j;
+    bigInteger k = i % j;
     std::cout << k << std::endl;
     return 0;
 }

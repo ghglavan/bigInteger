@@ -219,7 +219,11 @@ bigInteger& operator% (bigInteger i1, bigInteger i2){
 
     // if second number is zero we throw an error
     if(i2.digits.empty()){
-        throw "Mod 0";
+        throw std::invalid_argument("Modulo 0");
+    }
+
+    if(i1.sign || i2.sign){
+        throw std::invalid_argument("Negative modulo");
     }
 
     // we define 0
@@ -243,8 +247,6 @@ bigInteger& operator% (bigInteger i1, bigInteger i2){
         ret->digits = i1.digits;
     return *ret;
 }
-
-
 
 std::istream& operator>> (std::istream& is, bigInteger &integer){
 
@@ -287,7 +289,7 @@ std::ostream& operator<< (std::ostream& os, bigInteger &integer){
 bigInteger& operator/ (bigInteger i1, bigInteger i2){
     // division by 0
     if(i2.digits.empty()){
-        throw "Divison by 0";
+        throw std::invalid_argument("Divison by 0");
     }
     if(i1.digits.empty()){
         bigInteger *zero = new bigInteger;
@@ -298,7 +300,13 @@ bigInteger& operator/ (bigInteger i1, bigInteger i2){
     }
 
     bigInteger *result = new bigInteger;
-    result->sign = false;
+
+    if(i1.sign == i2.sign)
+        result->sign = false;
+    else
+        result->sign = true;
+
+    i1.sign = i2.sign = false;
 
     // we define 0
     bigInteger zero;
@@ -330,7 +338,8 @@ bigInteger& operator/ (bigInteger i1, bigInteger i2){
             c++;
         }
 
-        std::cout<<"Div is: "<<aux<<" "<<c<<std::endl;
+        if(div.digits == i2.digits)
+            c++;
 
         result->digits.push_front(c);
 
@@ -343,6 +352,27 @@ bigInteger& operator/ (bigInteger i1, bigInteger i2){
 
 }
 
+bigInteger& greatestCommonDivisor(bigInteger i1, bigInteger i2){
+    bigInteger c;
+    bigInteger zero;
+    zero.sign = false;
+    zero.digits.push_back(0);
+
+    i1.sign = i2.sign = c.sign = false;
+
+    while(isBigger(i2, zero)){
+        c = i1 % i2;
+        i1.digits = i2.digits;
+        i2.digits = c.digits;
+    }
+
+    bigInteger *ret = new bigInteger;
+    ret->sign = false;
+    ret->digits = i1.digits;
+
+    return *ret;
+}
+
 int main(){
     bigInteger i, j;
     std::cin >> i;
@@ -350,6 +380,6 @@ int main(){
     bigInteger k;
     k = i / j;
     //std::cout << i << std::endl << j << std::endl;
-    std::cout << k << std::endl;
+    std::cout << greatestCommonDivisor(i, j) << std::endl;
     return 0;
 }

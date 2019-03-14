@@ -4,9 +4,17 @@
 #include <vector>
 
 class bigInteger{
-public:
+private:
     bool sign; // false for positive, true for negative
     std::list<int> digits;
+public:
+
+
+
+    ~bigInteger(){
+        std::list<int>::iterator it1 = digits.begin(), it2 = digits.end();
+        digits.erase(it1, it2);
+    }
 
     void removeLeadingZeroes(){
         while(digits.back() == 0 && !digits.empty()){
@@ -24,6 +32,21 @@ public:
         }
         return it;
     }
+
+    // friend functions
+    friend bool isSmaller(bigInteger, bigInteger);
+    friend bool isBigger(bigInteger, bigInteger);
+    friend bigInteger& operator- (bigInteger, bigInteger);
+    friend bigInteger& operator+ (bigInteger, bigInteger);
+    friend bigInteger& operator* (bigInteger, bigInteger);
+    friend bigInteger& operator/ (bigInteger, bigInteger);
+    friend bigInteger& operator% (bigInteger, bigInteger);
+    friend std::istream& operator>> (std::istream&, bigInteger&);
+    friend std::ostream& operator<< (std::ostream&, bigInteger&);
+    friend bigInteger& greatestCommonDivisor(bigInteger, bigInteger);
+
+    // friend classes
+    friend class bigRational;
 };
 
 // smaller or equal
@@ -158,6 +181,15 @@ bigInteger& operator+ (bigInteger i1, bigInteger i2){
 }
 
 bigInteger& operator* (bigInteger i1, bigInteger i2){
+
+    if(i1.digits.empty() || i2.digits.empty()){
+        bigInteger* zero = new bigInteger;
+        zero->sign = false;
+        zero->digits.push_back(0);
+
+        return *zero;
+    }
+
     std::vector<bigInteger> sums;
 
     int shift = 0;
@@ -353,6 +385,10 @@ bigInteger& operator/ (bigInteger i1, bigInteger i2){
 }
 
 bigInteger& greatestCommonDivisor(bigInteger i1, bigInteger i2){
+
+    if(i1.digits.empty() || i2.digits.empty())
+        throw std::invalid_argument("GCD of 0");
+
     bigInteger c;
     bigInteger zero;
     zero.sign = false;
@@ -373,13 +409,83 @@ bigInteger& greatestCommonDivisor(bigInteger i1, bigInteger i2){
     return *ret;
 }
 
+class bigRational{
+private:
+    bool sign;
+    bigInteger numerator;
+    bigInteger denominator;
+
+    void evalSign(){
+        if(numerator.sign == denominator.sign)
+            sign = false;
+        else
+            sign = true;
+    }
+
+public:
+
+    void simplify(){
+        bigInteger gcd = greatestCommonDivisor(numerator, denominator);
+        numerator = numerator / gcd;
+        denominator = denominator / gcd;
+
+        evalSign();
+    }
+
+    // friend functions
+    friend bigRational& operator+ (bigRational, bigRational);
+    friend bigRational& operator* (bigRational, bigRational);
+    friend std::istream& operator>> (std::istream&, bigRational&);
+    friend std::ostream& operator<< (std::ostream&, bigRational&);
+};
+
+bigRational& operator+ (bigRational i1, bigRational i2){
+
+    bigRational *ret = new bigRational;
+
+    i1.numerator = i1.numerator * i2.denominator;
+    i2.numerator = i2.numerator * i1.denominator;
+
+    i1.denominator = i1.denominator * i2.denominator;
+
+    ret->numerator = i1.numerator + i2.numerator;
+    ret->denominator = i1.denominator;
+
+    ret->simplify();
+
+    return *ret;
+}
+
+bigRational& operator* (bigRational i1, bigRational i2){
+    bigRational *ret = new bigRational;
+
+    ret->numerator = i1.numerator * i2.numerator;
+    ret->denominator = i1.denominator * i2.denominator;
+
+    ret->simplify();
+
+    return *ret;
+}
+
+std::istream& operator>> (std::istream& is, bigRational& rational){
+    is>>rational.numerator;
+    is>>rational.denominator;
+
+    rational.simplify();
+
+    return is;
+}
+
+std::ostream& operator<< (std::ostream& os, bigRational& rational){
+    os<<rational.numerator<<"/"<<rational.denominator;
+
+    return os;
+}
+
 int main(){
-    bigInteger i, j;
-    std::cin >> i;
-    std::cin >> j;
-    bigInteger k;
-    k = i / j;
-    //std::cout << i << std::endl << j << std::endl;
-    std::cout << greatestCommonDivisor(i, j) << std::endl;
+    bigRational k;
+    bigRational p;
+    std::cin>>k>>p;
+    std::cout<<k * p;
     return 0;
 }

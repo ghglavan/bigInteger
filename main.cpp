@@ -9,7 +9,13 @@ private:
     std::list<int> digits;
 public:
 
+    bool getSign(){
+        return sign;
+    }
 
+    void setSign(bool x){
+        sign = x;
+    }
 
     ~bigInteger(){
         std::list<int>::iterator it1 = digits.begin(), it2 = digits.end();
@@ -86,6 +92,59 @@ bigInteger& operator- (bigInteger i1, bigInteger i2){
     }
     else
         i3->sign = false;
+
+    if(!i1.sign && i2.sign){
+        // plus
+        i1.sign = i2.sign = false;
+
+        int carry = 0;
+
+        std::list<int>::iterator it1 = i1.digits.begin();
+        std::list<int>::iterator it2 = i2.digits.begin();
+
+        for(; it1 != i1.digits.end() && it2 != i2.digits.end(); ++it1, ++it2){
+            int sum = *it1 + *it2 + carry;
+
+            if(carry)
+                carry = 0;
+
+            if(sum > 9)
+                carry = 1;
+
+            i3->digits.push_back(sum % 10);
+        }
+
+        for(; it1 != i1.digits.end(); ++it1){
+            int aux = *it1 + carry;
+
+            if(carry)
+                carry = 0;
+
+            i3->digits.push_back(aux % 10);
+
+            if(aux > 9)
+                carry = 1;
+        }
+
+        for(; it2 != i2.digits.end(); ++it2){
+            int aux = *it2 + carry;
+
+            if(carry)
+                carry = 0;
+
+            i3->digits.push_back(aux % 10);
+
+            if(aux > 9)
+                carry = 1;
+        }
+
+        if(carry)
+            i3->digits.push_back(1);
+
+        i3->removeLeadingZeroes();
+        return *i3;
+
+    }
 
     int carry = 0;
 
@@ -422,9 +481,15 @@ private:
             sign = true;
     }
 
+    bool isNumeratorZero(){
+        return numerator.digits.empty();
+    }
+
 public:
 
     void simplify(){
+        if(numerator.digits.empty())
+            return;
         bigInteger gcd = greatestCommonDivisor(numerator, denominator);
         numerator = numerator / gcd;
         denominator = denominator / gcd;
@@ -477,15 +542,25 @@ std::istream& operator>> (std::istream& is, bigRational& rational){
 }
 
 std::ostream& operator<< (std::ostream& os, bigRational& rational){
+    if(rational.isNumeratorZero()){
+        os<<"0";
+        return os;
+    }
+
+    if(rational.sign)
+        os<<"-";
+
+    rational.denominator.setSign(false);
+    rational.numerator.setSign(false);
+
     os<<rational.numerator<<"/"<<rational.denominator;
 
     return os;
 }
 
 int main(){
-    bigRational k;
-    bigRational p;
+    bigInteger k, p;
     std::cin>>k>>p;
-    std::cout<<k * p;
+    std::cout<<k - p<<std::endl;
     return 0;
 }

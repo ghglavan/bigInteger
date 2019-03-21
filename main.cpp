@@ -40,6 +40,8 @@ public:
     }
 
     // friend functions
+    
+    // use references so u dont copy all the tine :D (const references when u dont want to modify anything)
     friend bool isSmaller(bigInteger, bigInteger);
     friend bool isBigger(bigInteger, bigInteger);
     friend bigInteger& operator- (bigInteger, bigInteger);
